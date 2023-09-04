@@ -1,4 +1,4 @@
-name: Contiuous Deployment
+name: Continuous Deployment
 
 on:
   push:
@@ -26,11 +26,80 @@ jobs:
       # - name: Run minifier
       #   run: npm run minify
 
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ vars.FTP_SERVER }}
+          username: ${{ vars.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./wordpress/wp-content/themes/${{ vars.THEME_NAME }}/
+          server-dir: ${{ vars.FTP_SERVER_DIR }}
+
+      - name: Check Website Reachability
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+          URL="${{ vars.LIVE_URL }}"
+
+          # Perform a cURL request to fetch the HTTP response code.
+          echo "Checking if $URL is reachable..."
+          HTTP_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" "$URL")
+
+          # Check if the HTTP status code is not 200 (OK).
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Webpage is reachable but returns an unexpected status code: $HTTP_STATUS"
+            exit 1
+          else
+            echo "Webpage is reachable and returns a 200 (OK) status code."
+          fi
+
       - name: Push
         uses: s0/git-publish-subdir-action@develop
         env:
           REPO: self
           BRANCH: theme
-          FOLDER: ./wordpress/wp-content/themes/xxx/
+          FOLDER: ./wordpress/wp-content/themes/${{ vars.THEME_NAME }}/
           GITHUB_TOKEN: ${{ secrets.PAT }}
           MESSAGE: 'Build: ({sha}) {msg}'
+
+  rollback:
+    runs-on: ubuntu-latest
+    needs: cd
+    if: failure()
+
+    steps:
+      - name: Checkout theme branch
+        uses: actions/checkout@v2
+        with:
+          ref: theme
+
+      - name: Rollback files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ vars.FTP_SERVER }}
+          username: ${{ vars.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./
+          server-dir: ${{ vars.FTP_SERVER_DIR }}
+
+      - name: Check Website Reachability after Rollback
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+
+          URL="${{ vars.LIVE_URL }}"
+
+          # Perform a cURL request to fetch the HTTP response code.
+          echo "Checking if $URL is reachable..."
+          HTTP_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" "$URL")
+
+          # Check if the HTTP status code is not 200 (OK).
+          echo ""
+          echo "Rollback result:"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Webpage is reachable but returns an unexpected status code: $HTTP_STATUS"
+            exit 1
+          else
+            echo "Webpage is reachable and returns a 200 (OK) status code."
+          fi
