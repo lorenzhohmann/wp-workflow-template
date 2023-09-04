@@ -7,7 +7,7 @@
     "url": "https://github.com/lorenzhohmann/wp-workflow-template"
   },
   "scripts": {
-    "lint": "eslint wordpress/wp-content/themes/oceanwp-child --fix",
+    "lint": "eslint wordpress/wp-content/themes/oceanwp-child --fix --no-error-on-unmatched-pattern",
     "format": "prettier --write wordpress/wp-content/themes/oceanwp-child",
     "minify": "./minify.sh wordpress/wp-content/themes/oceanwp-child"
   },
