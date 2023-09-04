@@ -1,0 +1,11 @@
+.env
+wordpress/*
+wordpress/wp-content/*
+!wordpress/wp-content/
+wordpress/wp-content/themes/*
+!wordpress/wp-content/themes/
+wordpress/wp-content/themes/xxx/*
+!wordpress/wp-content/themes/xxx/
+!wordpress/wp-content/themes/xxx/*
+node_modules/
+*.sql

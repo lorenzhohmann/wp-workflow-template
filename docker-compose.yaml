@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  database:
+    image: mysql:latest
+    container_name: my-mysql-db
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: my-phpmyadmin
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 5G
+    ports:
+      - '8081:80'
+    depends_on:
+      - database
+
+  php:
+    build:
+      context: .
+      dockerfile: ./configs/php.dockerfile
+    volumes:
+      - ./wordpress:/var/www/html
+    ports:
+      - '9000:9000'
+    depends_on:
+      - database
+
+  nginx:
+    image: nginx:stable-alpine
+    volumes:
+      - ./configs/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./wordpress:/var/www/html:delegated
+    ports:
+      - '80:80'
+
+volumes:
+  mysql-data:

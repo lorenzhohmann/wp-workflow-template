@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "mikestead.dotenv",
+    "dbaeumer.vscode-eslint",
+    "josee9988.minifyall",
+    "esbenp.prettier-vscode",
+    "rvest.vs-code-prettier-eslint",
+    "ms-azuretools.vscode-docker",
+  ]
+}
