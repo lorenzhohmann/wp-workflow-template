@@ -11,6 +11,7 @@ read remote_repo
 
 # Setup package.json
 sed -i 's/"name": "wp-workflow-template"/"name": "'"$worktitle"'"/' package.json
+sed -i 's/wordpress\/wp-content\/themes\/xxx/wordpress\/wp-content\/themes\/'"$theme_name"'/g' package.json
 
 # Setup .gitignore
 sed -i 's/wordpress\/wp-content\/themes\/xxx\//wordpress\/wp-content\/themes\/'"$theme_name"'\//' .gitignore

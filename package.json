@@ -7,21 +7,10 @@
     "url": "https://github.com/lorenzhohmann/wp-workflow-template"
   },
   "scripts": {
-    "lint": "eslint wordpress/wp-content/themes/xxx --fix",
-    "format": "prettier --write wordpress/wp-content/themes/xxx",
-    "minify": "./minify.sh wordpress/wp-content/themes/xxx"
+    "lint": "eslint wordpress/wp-content/themes/oceanwp-child --fix",
+    "format": "prettier --write wordpress/wp-content/themes/oceanwp-child",
+    "minify": "./minify.sh wordpress/wp-content/themes/oceanwp-child"
   },
-  "keywords": [
-    "git",
-    "wordpress",
-    "wp",
-    "ci",
-    "cd",
-    "devops",
-    "continuous integration",
-    "continuous delivery"
-  ],
-  "author": "Lorenz Hohmann",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.2",

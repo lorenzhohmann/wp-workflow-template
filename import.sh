@@ -10,72 +10,6 @@ local_path="wordpress"
 
 #########################
 #########################
-####### FUNCTIONS #######
-#########################
-#########################
-
-# Import a local tgz file
-import_tgz() {
-  # Grep tgz file name
-  while true; do
-    echo "Enter the tgz file:"
-    read tgz_file
-
-    if [ -z "$name" ]; then
-      echo "[ERR] tgz file cannot be empty."
-    else
-      break
-    fi
-  done
-
-  tar -xvzf $tgz_file $local_path
-}
-
-# create tgz on remote, download and extract it
-download_remote_tgz() {
-  # TODO
-}
-
-# Download directory from remote server
-sync_with_remote() {
-  domain=$(echo "$hostname" | sed -E 's~https?://([^/]+).*~\1~')
-  remote_server_default_path="/var/www/vhosts/$domain/httpdocs"
-  echo "Enter installation path from remote host (leave empty to use this path: $remote_server_default_path):"
-  read remote_path
-
-  if [[ -z "$remote_path" ]]; then
-    remote_path=$remote_server_default_path
-  fi
-
-  # Sync from remote => local (download)
-  # rsync -avhz --progress --delete-after user@server.com:"$remote_path/*" "$local_path"
-
-  echo "[INFO] Successfully synced remote ($remote_path) with local folder ($local_path/)"
-}
-
-# Show the menu to choose between sync and import local tgz
-show_choose_remote_sync_local_tgz() {
-  echo "Choose an option:"
-  echo "1. Sync from remote"
-  echo "2. Download whole page from remote"
-  echo "3. Import local tgz file"
-  echo "0. Exit"
-}
-
-# Read the input for sync or import local tgz
-read_choice_remote_sync_local_tgz() {
-  read -p "Enter your choice: " choice_remote_sync_local_tgz
-  case "$choice_remote_sync_local_tgz" in
-  1) sync_with_remote ;;
-  2) download_remote_tgz ;;
-  3) import_tgz ;;
-  0) exit ;;
-  *) echo "[ERR] Invalid choice" ;;
-  esac
-}
-
-#########################
-#########################
 ####### WORKFLOW ########
 #########################
 #########################
@@ -88,16 +22,6 @@ while true; do
   if [ -z "$hostname" ]; then
     echo "[ERR] Hostname cannot be empty."
   else
-    break
-  fi
-done
-
-# Choose sync with remote or import local tgz file
-while true; do
-  show_choose_remote_sync_local_tgz
-  read_choice_remote_sync_local_tgz
-
-  if [ ! -z "$choice_remote_sync_local_tgz" ]; then
     break
   fi
 done
@@ -151,11 +75,9 @@ if [ -n "$theme_path" ]; then
   echo "You selected: $theme_path"
   sed -i "s/THEME_DIRECTORY=.*/THEME_DIRECTORY=$theme_path" .env
 else
-  echo "No theme selected. Exit."
+  echo "[ERR] No theme selected. Exit."
+  exit 1
 fi
-
-# Install Node stuff
-npm i
 
 # Start Docker Compose Daemon
 docker compose up -d
