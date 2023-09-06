@@ -42,16 +42,26 @@ import_local() {
 # Sync files from remote server
 import_remote() {
   # read hostname and user of remote server
-  echo "Enter the connection data of the remote server (format: 'user@host')"
+  echo "Enter the connection data of the remote server (format: 'user@host'):"
   read remote_server
 
   # read remote directory
-  echo "Enter the remote directory (e.g. '/var/www/vhosts/example.com/httpdocs')"
+  domain=$(echo "$hostname" | sed -E 's#https?://([^/]+)/?.*#\1#')
+  default_remote_directory="/var/www/vhosts/$domain/httpdocs"
+  echo "Enter the remote directory (e.g. '$default_remote_directory' - leave empty to use this value):"
   read remote_directory
-  remote_directory="$remote_directory/*"
+
+  if [ -z "$remote_directory" ]; then
+    remote_directory="$default_remote_directory"
+  else
+    remote_directory="$remote_directory"
+  fi
 
   # Use rsync to sync the directories
-  rsync -avz --delete --progress --exclude=".ftp-deploy-sync-state.json" "$remote_server:$remote_directory" "$local_path"
+  rsync -avz --delete --progress --exclude=".ftp-deploy-sync-state.json" "$remote_server:$remote_directory/" "$local_path"
+
+  # Sync hidden files
+  # rsync -avz --delete --progress --exclude=".ftp-deploy-sync-state.json" "$remote_server:$remote_directory/.[^.]*" "$local_path"
 
   # check if rsync was successful
   if [ $? -eq 0 ]; then
@@ -79,6 +89,21 @@ import_sql() {
 ####### WORKFLOW ########
 #########################
 #########################
+
+# Stop Docker Compose Daemon
+docker compose down
+
+# Grep hostname
+while true; do
+  echo "Enter the live hostname (format: 'https://domain.tld'):"
+  read hostname
+
+  if [ -z "$hostname" ]; then
+    echo "[ERR] Hostname cannot be empty."
+  else
+    break
+  fi
+done
 
 # Ask to import local tgz file or to sync with remote server and call the specific functions
 while true; do
@@ -130,18 +155,6 @@ else
   exit 1
 fi
 
-# Grep hostname
-while true; do
-  echo "Enter the live hostname (format: 'https://domain.tld'):"
-  read hostname
-
-  if [ -z "$hostname" ]; then
-    echo "[ERR] Hostname cannot be empty."
-  else
-    break
-  fi
-done
-
 # Grep sql file name
 for file in "$local_path"/*.sql; do
   if [[ -f "$file" ]]; then
@@ -162,19 +175,20 @@ else
   echo "[ERR] No .sql file found. Skip."
 fi
 
+# Update permissions
+chmod 777 $local_path
+
 # Start Docker Compose Daemon
-docker compose down
 docker compose up -d
 
 # Update wp-config.php with database host
 sed -i "s/define( *'DB_HOST', *'\([^']*\)'.*/define( 'DB_HOST', 'database' );/g" "$local_path/wp-config.php"
 
-echo "<<<<<<>>>>>>"
+echo ""
+echo "<<<<<< IMPORT DONE >>>>>>"
 echo "Website: http://localhost/"
 echo "phpmyadmin: http://localhost:8081/"
-echo "  Username: $db_user"
-echo "  Password: $db_password"
 echo ""
 if [ -z "$sql_file" ]; then
-  echo "Warning: No SQL file was imported. Do it manually!"
+  echo "!! Warning: No SQL file was imported. Do it manually !!"
 fi

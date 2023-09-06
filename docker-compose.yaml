@@ -33,18 +33,11 @@ services:
       dockerfile: ./configs/php.dockerfile
     volumes:
       - ./wordpress:/var/www/html
-    ports:
-      - '9000:9000'
-    depends_on:
-      - database
-
-  nginx:
-    image: nginx:stable-alpine
-    volumes:
-      - ./configs/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./wordpress:/var/www/html:delegated
+      - ./configs/apache/httpd.conf:/etc/apache2/httpd.conf
     ports:
       - '80:80'
+    depends_on:
+      - database
 
 volumes:
   mysql-data:
